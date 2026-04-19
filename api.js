@@ -1,85 +1,46 @@
-const path = require('path')
-const Products = require('./products')
-const autoCatch = require('./lib/auto-catch')
+const Products = require('./products');
 
-/**
- * Handle the root route
- * @param {object} req
- * @param {object} res
-*/
-function handleRoot(req, res) {
-  res.sendFile(path.join(__dirname, '/index.html'));
-}
-
-/**
- * List all products
- * @param {object} req
- * @param {object} res
- */
-async function listProducts(req, res) {
-  // Extract the limit and offset query parameters
-  const { offset = 0, limit = 25, tag } = req.query
-  // Pass the limit and offset to the Products service
-  res.json(await Products.list({
-    offset: Number(offset),
-    limit: Number(limit),
-    tag
-  }))
-}
-
-
-/**
- * Get a single product
- * @param {object} req
- * @param {object} res
- */
-async function getProduct(req, res, next) {
-  const { id } = req.params
-
-  const product = await Products.get(id)
-  if (!product) {
-    return next()
+exports.listProducts = async (req, res) => {
+  try {
+    const data = await Products.list();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
+};
 
-  return res.json(product)
-}
+exports.getProduct = async (req, res) => {
+  try {
+    const data = await Products.get(req.params.id);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-/**
- * Create a product
- * @param {object} req 
- * @param {object} res 
- */
-async function createProduct(req, res) {
-  console.log('request body:', req.body)
-  res.json(req.body)
-}
+exports.createProduct = async (req, res) => {
+  try {
+    const data = await Products.create(req.body);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-/**
- * Edit a product
- * @param {object} req
- * @param {object} res
- * @param {function} next
- */
-async function editProduct(req, res, next) {
-  console.log(req.body)
-  res.json(req.body)
-}
+exports.editProduct = async (req, res) => {
+  try {
+    const data = await Products.update(req.params.id, req.body);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-/**
- * Delete a product
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
- */
-async function deleteProduct(req, res, next) {
-  res.json({ success: true })
-}
-
-module.exports = autoCatch({
-  handleRoot,
-  listProducts,
-  getProduct,
-  createProduct,
-  editProduct,
-  deleteProduct
-});
+exports.deleteProduct = async (req, res) => {
+  try {
+    await Products.remove(req.params.id);
+    res.json({ message: 'Deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
