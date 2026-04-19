@@ -1,46 +1,43 @@
-const Products = require('./products');
+const path = require('path')
+const Products = require('./products')
+const autoCatch = require('./lib/auto-catch')
 
-exports.listProducts = async (req, res) => {
-  try {
-    const data = await Products.list();
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+function handleRoot(req, res) {
+  res.sendFile(path.join(__dirname, '/index.html'))
+}
 
-exports.getProduct = async (req, res) => {
-  try {
-    const data = await Products.get(req.params.id);
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+async function listProducts(req, res) {
+  res.json(await Products.list())
+}
 
-exports.createProduct = async (req, res) => {
-  try {
-    const data = await Products.create(req.body);
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+async function getProduct(req, res, next) {
+  const product = await Products.get(req.params.id)
+  if (!product) return next()
+  res.json(product)
+}
 
-exports.editProduct = async (req, res) => {
-  try {
-    const data = await Products.update(req.params.id, req.body);
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+async function createProduct(req, res) {
+  const product = await Products.create(req.body)
+  res.json(product)
+}
 
-exports.deleteProduct = async (req, res) => {
-  try {
-    await Products.remove(req.params.id);
-    res.json({ message: 'Deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+async function editProduct(req, res, next) {
+  const product = await Products.update(req.params.id, req.body)
+  if (!product) return next()
+  res.json(product)
+}
+
+async function deleteProduct(req, res, next) {
+  const product = await Products.remove(req.params.id)
+  if (!product) return next()
+  res.json({ success: true })
+}
+
+module.exports = autoCatch({
+  handleRoot,
+  listProducts,
+  getProduct,
+  createProduct,
+  editProduct,
+  deleteProduct
+})
