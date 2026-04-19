@@ -7,29 +7,51 @@ function handleRoot(req, res) {
 }
 
 async function listProducts(req, res) {
-  res.json(await Products.list())
+  const { offset = 0, limit = 25, tag } = req.query
+
+  res.json(await Products.list({
+    offset: Number(offset),
+    limit: Number(limit),
+    tag
+  }))
 }
 
 async function getProduct(req, res, next) {
-  const product = await Products.get(req.params.id)
-  if (!product) return next()
-  res.json(product)
+  const { id } = req.params
+
+  const product = await Products.get(id)
+  if (!product) {
+    return next()
+  }
+
+  return res.json(product)
 }
 
 async function createProduct(req, res) {
+  console.log('request body:', req.body)
   const product = await Products.create(req.body)
   res.json(product)
 }
 
 async function editProduct(req, res, next) {
-  const product = await Products.update(req.params.id, req.body)
-  if (!product) return next()
+  const { id } = req.params
+  const product = await Products.edit(id, req.body)
+
+  if (!product) {
+    return next()
+  }
+
   res.json(product)
 }
 
 async function deleteProduct(req, res, next) {
-  const product = await Products.remove(req.params.id)
-  if (!product) return next()
+  const { id } = req.params
+  const product = await Products.remove(id)
+
+  if (!product) {
+    return next()
+  }
+
   res.json({ success: true })
 }
 
